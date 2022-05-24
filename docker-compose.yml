@@ -7,6 +7,7 @@ services:
     environment:
       SERVICES: lambda,s3,iam,sns,sqs
       DEBUG: 1
+      LOCALSTACK_API_KEY: ${LOCALSTACK_PRO_KEY}
     ports:
       - 4566:4566
     volumes:
