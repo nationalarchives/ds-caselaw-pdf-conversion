@@ -14,5 +14,10 @@ update:
 	make build
 	@sh scripts/update-lambda.sh
 
+lambda:
+	@zip -g dist/lambda.zip ds-caselaw-pdf-conversion/lambda_function.py
+	@echo 'Built dist/lambda.zip'
+	@sh scripts/update-lambda.sh
+
 upload:
 	awslocal s3 cp aws_examples/s3/public-asset-bucket/judgment.docx s3://public-asset-bucket
