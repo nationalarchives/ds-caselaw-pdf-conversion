@@ -14,3 +14,7 @@ awslocal lambda create-function \
 
 awslocal s3api create-bucket \
   --bucket public-asset-bucket
+
+awslocal --endpoint-url=http://localhost:4566 \
+s3api put-bucket-notification-configuration --bucket public-asset-bucket \
+--notification-configuration file://aws_examples/s3/s3-notif-config.json

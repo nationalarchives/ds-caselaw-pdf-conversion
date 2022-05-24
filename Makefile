@@ -13,3 +13,6 @@ setup:
 update:
 	make build
 	@sh scripts/update-lambda.sh
+
+upload:
+	awslocal s3 cp aws_examples/s3/public-asset-bucket/judgment.docx s3://public-asset-bucket

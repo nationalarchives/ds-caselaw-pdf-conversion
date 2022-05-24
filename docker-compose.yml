@@ -5,7 +5,7 @@ services:
     image: localstack/localstack
     network_mode: bridge
     environment:
-      SERVICES: lambda,s3,iam
+      SERVICES: lambda,s3,iam,sns,sqs
       DEBUG: 1
     ports:
       - 4566:4566
