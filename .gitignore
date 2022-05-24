@@ -1,0 +1,10 @@
+venv
+package
+dist
+.idea
+.env
+
+*.zip
+.DS_Store
+.aws-sam
+*/__pycache__
