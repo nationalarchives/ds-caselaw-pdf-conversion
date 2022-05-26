@@ -6,7 +6,7 @@ import boto3
 
 def extract_libre_office():
     # open file
-    file = tarfile.open("/opt/lo.tar.gz")
+    file = tarfile.open("/opt/br-layer.tar.gz")
     # extract file
     file.extractall('/tmp')
     file.close()
