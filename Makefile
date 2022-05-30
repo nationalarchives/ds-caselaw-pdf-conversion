@@ -15,7 +15,7 @@ update:
 	@sh scripts/update-lambda.sh
 
 lambda:
-	@cd ds-caselaw-pdf-conversion && zip -g dist/lambda.zip lambda_function.py && cd ..
+	@cd ds-caselaw-pdf-conversion && zip -g ../dist/lambda.zip lambda_function.py && cd ..
 	@echo 'Built dist/lambda.zip'
 	@sh scripts/update-lambda.sh
 

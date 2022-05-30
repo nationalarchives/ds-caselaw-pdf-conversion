@@ -7,7 +7,7 @@ awslocal iam create-role \
 awslocal lambda create-function \
   --function-name pdf-lambda \
   --zip-file fileb://dist/lambda.zip \
-  --handler ds-caselaw-pdf-conversion/lambda_function.handler \
+  --handler lambda_function.handler \
   --runtime python3.9 \
   --environment "Variables={PUBLIC_ASSET_BUCKET=$PUBLIC_ASSET_BUCKET,AWS_SECRET_KEY=$AWS_SECRET_KEY,AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID,AWS_ENDPOINT_URL=$AWS_ENDPOINT_URL}" \
   --role arn:aws:iam::000000000000:role/lambda-role \

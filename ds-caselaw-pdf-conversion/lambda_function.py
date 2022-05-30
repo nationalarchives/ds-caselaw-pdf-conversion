@@ -1,8 +1,10 @@
 import subprocess
 import tarfile
+import glob
 
 def extract_libre_office():
-    file = tarfile.open("/opt/br-layer.tar.gz")
+    print (glob.glob("/opt/*tar*"))
+    file = tarfile.open("/opt/lo.tar.gz")
     file.extractall("/tmp")
     file.close()
     return "/tmp/instdir"
