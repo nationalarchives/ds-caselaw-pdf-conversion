@@ -19,5 +19,9 @@ lambda:
 	@echo 'Built dist/lambda.zip'
 	@sh scripts/update-lambda.sh
 
+onlylambda:
+	@cd ds-caselaw-pdf-conversion && zip -g ../dist/lambda.zip lambda_function.py && cd ..
+	@echo 'Built dist/lambda.zip'
+
 upload:
 	awslocal s3 cp aws_examples/s3/public-asset-bucket/judgment.docx s3://public-asset-bucket
