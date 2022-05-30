@@ -4,6 +4,7 @@ build:
 	@rm dist/lambda.zip & 2>&1
 	@cd package && zip -r ../dist/lambda.zip * && cd ..
 	@cd ds-caselaw-pdf-conversion && zip -g ../dist/lambda.zip lambda_function.py && cd ..
+	@zip -g dist/lambda.zip fonts
 	@echo 'Built dist/lambda.zip'
 
 setup:
@@ -16,11 +17,13 @@ update:
 
 lambda:
 	@cd ds-caselaw-pdf-conversion && zip -g ../dist/lambda.zip lambda_function.py && cd ..
+	@zip -g dist/lambda.zip fonts
 	@echo 'Built dist/lambda.zip'
 	@sh scripts/update-lambda.sh
 
 onlylambda:
 	@cd ds-caselaw-pdf-conversion && zip -g ../dist/lambda.zip lambda_function.py && cd ..
+	@zip -g dist/lambda.zip fonts
 	@echo 'Built dist/lambda.zip'
 
 upload:
