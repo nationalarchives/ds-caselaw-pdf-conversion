@@ -11,7 +11,7 @@ awslocal lambda create-function \
   --runtime python3.9 \
   --environment "Variables={PUBLIC_ASSET_BUCKET=$PUBLIC_ASSET_BUCKET,AWS_SECRET_KEY=$AWS_SECRET_KEY,AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID,AWS_ENDPOINT_URL=$AWS_ENDPOINT_URL}" \
   --role arn:aws:iam::000000000000:role/lambda-role \
-  --layers arn:aws:lambda:eu-west-2:764866452798:layer:libreoffice-gzip:1 \
+  --layers arn:aws:lambda:eu-west-2:626206937213:layer:libreoffice-without-brotli:1 \
   --memory-size 512 \
   --timeout 600
 
