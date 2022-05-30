@@ -27,6 +27,7 @@ def extract_libre_office():
     file = tarfile.open("/opt/br-layer.tar.gz")
     file.extractall("/tmp")
     file.close()
+    print(list(os.walk('/tmp/instdir')))
     return "/tmp/instdir"
 
 def s3_urls(event):
@@ -40,15 +41,8 @@ def libre_office_executable():
     libre_office_install_dir = extract_libre_office()
     return f"{libre_office_install_dir}/program/soffice.bin"
 
-def extract_fonts():
-    os.makedirs('/tmp/instdir/share/fonts/truetype/', exist_ok=True)
-    subprocess.call('cp fonts/times.ttf /tmp/instdir/share/fonts/truetype/times.ttf', shell=True)
-    subprocess.call('cp fonts/fontconfig.conf /tmp/instdir/share/fonts/truetype/fontconfig.conf', shell=True)
-
-
 def handler(event, context):
     # client = get_s3_client()
-    extract_fonts()
     lo = libre_office_executable()
 
     # Retrieve docx file from S3
@@ -70,17 +64,19 @@ def handler(event, context):
 
     my_env = os.environ.copy()
     print ("cwd", os.getcwd())
-    user = os.path.expanduser('~')
-    os.mkdir(user)
-    my_env['FONTCONFIG_FILE'] = "/tmp/instdir/share/fonts/truetype/fontconfig.conf"
+    my_env['FONTCONFIG_FILE'] = "/tmp/instdir/share/fonts/truetype/fc_local.conf"
     my_env["FONTCONFIG_PATH"] = "/tmp/instdir/share/fonts/truetype"
+    my_env["HOME"] = "/tmp"
+
 
     my_env["PATH"] = "/usr/sbin:/sbin:" + my_env["PATH"]
-    command_string = f"{lo} --strace --headless --norestore --invisible --nodefault --nofirststartwizard --nolockcheck --nologo --convert-to pdf:writer_pdf_Export --outdir /tmp /tmp/judgment.docx"
+    #command_string = f"{lo} --headless --norestore --invisible --nodefault --nofirststartwizard --nolockcheck --nologo --convert-to pdf:writer_pdf_Export --outdir /tmp /tmp/judgment.docx"
+    command_string = f"{lo} --convert-to pdf /tmp/judgment.docx"
     output = subprocess.run(command_string.split(), capture_output=True, text=True, env=my_env)
     print(glob.glob("/tmp/instdir/**/gdbtrace.log"))
     print(glob.glob("/tmp/*.docx"))
     print(glob.glob("/tmp/*.pdf"))
+    print(glob.glob("*.pdf"))
     print("stdout:")
     print(output.stdout)
     print("stderr:")
