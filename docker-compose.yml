@@ -10,8 +10,6 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-    ports:
-      - 3000:3000
     volumes:
       - ./data:/data:z
     restart: unless-stopped
