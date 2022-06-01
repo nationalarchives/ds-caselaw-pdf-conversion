@@ -16,6 +16,6 @@ RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
 
 COPY ./queue_listener ./queue_listener
-CMD ["python", "queue_listener/queue_listener.py"]
 
-#RUN apt install msttcorefonts ttf-mscorefonts-installer
+ENV QUEUE_ARN=${QUEUE_ARN}
+CMD ["python", "queue_listener/queue_listener.py"]

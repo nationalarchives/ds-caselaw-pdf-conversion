@@ -5,9 +5,9 @@ description = ""
 authors = ["Laura Porter <laura@dxw.com>"]
 
 [tool.poetry.dependencies]
-python = "3.9.7"
+python = "^3.9.7"
 boto3 = "^1.24.0"
-
+python-dotenv = "^0.20.0"
 [tool.poetry.dev-dependencies]
 
 [build-system]
