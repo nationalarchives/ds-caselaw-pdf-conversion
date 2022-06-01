@@ -3,4 +3,13 @@ RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
 
+# Install python/pip
+ENV PYTHONUNBUFFERED=1
+RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
+RUN python3 -m ensurepip
+RUN pip3 install --no-cache --upgrade pip setuptools
+
+COPY ./queue_listener ./queue_listener
+CMD ["python", "queue_listener/queue_listener.py"]
+
 #RUN apt install msttcorefonts ttf-mscorefonts-installer
