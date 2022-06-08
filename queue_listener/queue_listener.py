@@ -9,7 +9,7 @@ dotenv.load_dotenv()
 QUEUE_URL = os.getenv("QUEUE_URL")
 AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
-POLL_SECONDS = os.getenv("POLL_SECONDS", 30)
+POLL_SECONDS = 10
 sqs_client = boto3.client("sqs", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
 s3_client = boto3.client("s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
 
@@ -26,8 +26,8 @@ while True:
             etag = record["s3"]["object"]["eTag"].replace('"', "")
             docx_filename = f"/tmp/{etag}.docx"
             pdf_filename = f"/tmp/{etag}.pdf"
+
             print(f"Downloading {download_key}")
-            # maybe have a unique name?
             s3_client.download_file(
                 Bucket=bucket_name, Key=download_key, Filename=docx_filename
             )
