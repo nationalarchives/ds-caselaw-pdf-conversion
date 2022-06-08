@@ -19,8 +19,9 @@ while True:
         QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS
     )
     for message in messages_dict.get("Messages", []):
+        print(message)
         json_body = json.loads(message["Body"])
-        for record in json_body["Records"]:
+        for record in json_body.get("Records", []):
             bucket_name = record["s3"]["bucket"]["name"]  # or ['arn']
             download_key = record["s3"]["object"]["key"]
             etag = record["s3"]["object"]["eTag"].replace('"', "")
