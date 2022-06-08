@@ -7,11 +7,14 @@ import dotenv
 
 dotenv.load_dotenv()
 QUEUE_URL = os.getenv("QUEUE_URL")
-AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+# AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+# AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
 POLL_SECONDS = 10
-sqs_client = boto3.client("sqs", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
-s3_client = boto3.client("s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
+sqs_client = boto3.client(
+    "sqs", region_name=AWS_REGION
+)  # set endpoint_url=AWS_ENDPOINT_URL on localstack
+s3_client = boto3.client("s3", region_name=AWS_REGION)
 
 while True:
     print("Polling")
