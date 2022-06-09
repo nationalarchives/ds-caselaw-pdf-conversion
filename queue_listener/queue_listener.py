@@ -36,32 +36,32 @@ while True:
                 Bucket=bucket_name, Key=download_key, Filename=docx_filename
             )
 
-        print(
-            subprocess.run(
-                f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")
+            print(
+                subprocess.run(
+                    f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")
+                )
             )
-        )
 
-        # split on dots, remove last part and recombine with dots again
-        # to have net effect of removing extension
-        key_no_extension = ".".join(download_key.split(".")[:-1])
-        upload_key = key_no_extension + ".pdf"
+            # split on dots, remove last part and recombine with dots again
+            # to have net effect of removing extension
+            key_no_extension = ".".join(download_key.split(".")[:-1])
+            upload_key = key_no_extension + ".pdf"
 
-        # NOTE: there's a risk that some.pdf doesn't exist, we need to handle that case.
-        try:
-            s3_client.upload_file(
-                Bucket=bucket_name, Key=upload_key, Filename=pdf_filename
-            )
-            print(f"Uploaded {upload_key}")
-        except FileNotFoundError as exception:
-            print("LibreOffice probably didn't create a PDF for the input document.")
-            print(exception)
-
-        for file_to_delete in [pdf_filename, docx_filename]:
+            # NOTE: there's a risk that some.pdf doesn't exist, we need to handle that case.
             try:
-                os.remove(file_to_delete)
-            except FileNotFoundError:
-                pass
+                s3_client.upload_file(
+                    Bucket=bucket_name, Key=upload_key, Filename=pdf_filename
+                )
+                print(f"Uploaded {upload_key}")
+            except FileNotFoundError as exception:
+                print("LibreOffice probably didn't create a PDF for the input document.")
+                print(exception)
+
+            for file_to_delete in [pdf_filename, docx_filename]:
+                try:
+                    os.remove(file_to_delete)
+                except FileNotFoundError:
+                    pass
 
         # afterwards:
         sqs_client.delete_message(
