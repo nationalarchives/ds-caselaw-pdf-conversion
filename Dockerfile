@@ -18,7 +18,7 @@ RUN poetry config virtualenvs.create false \
 
 COPY ./queue_listener ./queue_listener
 COPY ./docker_context .
-COPY ./fonts /root/fonts
+COPY ./fonts ./fonts
 
 # Copy a LibreOffice config file which uses Times New Roman as the
 # default font -- see README.txt
@@ -27,17 +27,9 @@ RUN mkdir /root/.config/fontconfig
 RUN cp registrymodifications.xcu /root/.config/libreoffice/4/user/registrymodifications.xcu
 RUN cp fonts.conf /root/.config/fontconfig/fonts.conf
 
-RUN apk --no-cache add font-croscore && \
-    update-ms-fonts && \
-    fc-cache -f
-
-# Google fonts
-RUN wget https://github.com/google/fonts/archive/main.tar.gz -O gf.tar.gz
-RUN tar -xf gf.tar.gz
-RUN mkdir -p /usr/share/fonts/truetype/google-fonts
-RUN find /fonts-main/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/google-fonts/ \; || return 1
-RUN find /root/fonts/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/google-fonts/ \; || return 1
-RUN rm -f gf.tar.gz
+# Install fonts
+RUN mkdir -p /usr/share/fonts/truetype/docker-context
+RUN find /fonts/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/docker-context/ \; || return 1
 RUN fc-cache -f && rm -rf /var/cache/*
 
 ENV QUEUE_ARN=${QUEUE_ARN}
