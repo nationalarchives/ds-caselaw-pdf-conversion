@@ -25,5 +25,10 @@ RUN mkdir -p /root/.config/libreoffice/4/user
 RUN mkdir /root/.config/fontconfig
 RUN cp registrymodifications.xcu /root/.config/libreoffice/4/user/registrymodifications.xcu
 RUN cp fonts.conf /root/.config/fontconfig/fonts.conf
+
+RUN apk --no-cache add font-croscore && \
+    update-ms-fonts && \
+    fc-cache -f
+
 ENV QUEUE_ARN=${QUEUE_ARN}
 CMD ["python", "queue_listener/queue_listener.py"]
