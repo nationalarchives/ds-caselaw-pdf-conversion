@@ -7,14 +7,15 @@ import dotenv
 
 dotenv.load_dotenv()
 QUEUE_URL = os.getenv("QUEUE_URL")
-# AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
-# AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+USE_LOCALSTACK = os.getenv("USE_LOCALSTACK", None)
+AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL", None)
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", None)
 AWS_REGION = os.getenv("AWS_REGION")
 POLL_SECONDS = 10
 sqs_client = boto3.client(
-    "sqs", region_name=AWS_REGION
+    "sqs", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL
 )  # set endpoint_url=AWS_ENDPOINT_URL on localstack
-s3_client = boto3.client("s3", region_name=AWS_REGION)
+s3_client = boto3.client("s3", region_name=AWS_REGION, endpoint_url=AWS_ENDPOINT_URL)
 
 while True:
     print("Polling")
@@ -54,7 +55,9 @@ while True:
                 )
                 print(f"Uploaded {upload_key}")
             except FileNotFoundError as exception:
-                print("LibreOffice probably didn't create a PDF for the input document.")
+                print(
+                    "LibreOffice probably didn't create a PDF for the input document."
+                )
                 print(exception)
 
             for file_to_delete in [pdf_filename, docx_filename]:
