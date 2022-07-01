@@ -18,3 +18,30 @@ To deploy to production:
 3. Publish the release.
 4. Automated workflow will then force-push that release to the `production` branch, which will then be deployed to
    the production environment.
+
+## Republishing PDFs
+
+You can republish a PDF by uploading the PDF again, or by sending JSON of the form:
+
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "tna-caselaw-assets"
+        },
+        "object": {
+          "key": "eat/2022/1/eat_2022_1.docx",
+          "eTag": "fa2ef6e8abadbd5cc5cedf3f32834f1f"
+        }
+      }
+    }
+ ]
+}
+
+to the Send and Receive Messages page of the Simple Queuing System on AWS.
+
+The script scripts/create_json_for_bulk_pdf_regeneration will make that JSON
+file for you, if you want to remake every PDF that's backed by a docx file.
+
+(The eTag is arbitrary but should be a sensible filename fragment, no / )

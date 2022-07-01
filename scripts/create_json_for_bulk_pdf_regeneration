@@ -1,0 +1,12 @@
+# Untested as an actual script, but should create a JSON file suitable for
+# regenerating all PDFs from docx files if pasted into
+# Send and Recieve Messages (as a Send) for the Simple Queuing Service on AWS
+# (You probably want to open out.json in a text editor and copy-paste it)
+
+# You can change the bucket name in the 'dalmatian' line below, but remember
+# also to change the BUCKET setting in make_json.py
+
+dalmatian aws exec -i caselaw s3 ls --recursive tna-caselaw-assets > /tmp/tna-caselaw-assets.txt
+grep ".docx$" /tmp/tna-caselaw-assets.txt | cut -b 32-9999 > /tmp/files.txt
+# takes files.txt and outputs out.json which is the finished json
+python make_json.py
