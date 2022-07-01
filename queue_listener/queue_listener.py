@@ -54,7 +54,9 @@ while True:
                 )
                 print(f"Uploaded {upload_key}")
             except FileNotFoundError as exception:
-                print("LibreOffice probably didn't create a PDF for the input document.")
+                print(
+                    "LibreOffice probably didn't create a PDF for the input document."
+                )
                 print(exception)
 
             for file_to_delete in [pdf_filename, docx_filename]:
