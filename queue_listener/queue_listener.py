@@ -10,14 +10,21 @@ dotenv.load_dotenv()
 
 rollbar.init(os.getenv("ROLLBAR_ACCESS_TOKEN"))
 QUEUE_URL = os.getenv("QUEUE_URL")
-# AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
-# AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+# should be UNSET whenever using actual AWS
+# but set if we're using localstack
+ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
 POLL_SECONDS = 10
 sqs_client = boto3.client(
-    "sqs", region_name=AWS_REGION
-)  # set endpoint_url=AWS_ENDPOINT_URL on localstack
-s3_client = boto3.client("s3", region_name=AWS_REGION)
+    "sqs",
+    region_name=AWS_REGION,
+    endpoint_url=ENDPOINT_URL,
+)
+s3_client = boto3.client(
+    "s3",
+    region_name=AWS_REGION,
+    endpoint_url=ENDPOINT_URL,
+)
 
 while True:
     print("Polling")
