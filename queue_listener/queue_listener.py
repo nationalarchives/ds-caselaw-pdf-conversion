@@ -4,8 +4,11 @@ import subprocess
 
 import boto3
 import dotenv
+import rollbar
 
 dotenv.load_dotenv()
+
+rollbar.init(os.getenv("ROLLBAR_ACCESS_TOKEN"))
 QUEUE_URL = os.getenv("QUEUE_URL")
 # AWS_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 # AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
@@ -57,6 +60,7 @@ while True:
                 print(
                     "LibreOffice probably didn't create a PDF for the input document."
                 )
+                rollbar.report_exc_info()
                 print(exception)
 
             for file_to_delete in [pdf_filename, docx_filename]:
