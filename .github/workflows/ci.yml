@@ -1,0 +1,22 @@
+name: CI
+on:
+  pull_request:
+    branches: "main"
+
+  push:
+    branches: "main"
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3.1.2
+        with:
+          python-version: "3.9"
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v2.0.3
