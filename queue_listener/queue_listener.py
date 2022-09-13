@@ -53,7 +53,7 @@ def would_replace_custom_pdf(bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
-while True:
+def poll_once():
     print("Polling...")
     messages_dict = sqs_client.receive_message(
         QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS
@@ -115,3 +115,8 @@ while True:
         sqs_client.delete_message(
             QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"]
         )
+
+
+if __name__ == "__main__":
+    while True:
+        poll_once()
