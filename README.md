@@ -56,3 +56,21 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 2. From ds-caselaw-pdfconversion, run `scripts/setup-localstack.sh` to set up the queues etc.
 3. From ds-caselaw-pdfconversion, run `docker-compose up --build` to launch the LibreOffice container
    (`--build` will ensure the converter script is in the docker container)
+
+### Local testing
+
+`pytest queue_listener/tests.py` will run unit tests.
+
+Manual integration tests, having run Local Start up tasks above:
+
+You should see output like:
+```
+Downloading judgment.docx
+...
+Uploaded judgment.pdf
+```
+on startup.
+
+Running `scripts/upload_custom_file.sh` will do nothing, but then `scripts/upload_file.sh` should not upload and display the message:
+
+`judgment.pdf is from custom-pdfs, not replacing`
