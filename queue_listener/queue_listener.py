@@ -60,7 +60,10 @@ while True:
             # NOTE: there's a risk that some.pdf doesn't exist, we need to handle that case.
             try:
                 s3_client.upload_file(
-                    Bucket=bucket_name, Key=upload_key, Filename=pdf_filename
+                    Bucket=bucket_name,
+                    Key=upload_key,
+                    Filename=pdf_filename,
+                    ExtraArgs={"ContentType": "application/pdf"},
                 )
                 print(f"Uploaded {upload_key}")
             except FileNotFoundError as exception:
