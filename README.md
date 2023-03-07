@@ -49,8 +49,10 @@ The script scripts/create_json_for_bulk_pdf_regeneration will make that JSON
 file for you, if you want to remake every PDF that's backed by a docx file.
 
 (The eTag is arbitrary but should be a sensible filename fragment, no / )
-Start up:
+
+## Local setup
 
 1. From ds-caselaw-ingester, run `docker-compose up` to launch the Localstack container
-2. From ds-caselaw-pdfconversion, run `script setup-localstack` to set up the queues etc.
-3. From ds-caselaw-pdfconversion, run `docker-compose up` to launch the LibreOffice container
+2. From ds-caselaw-pdfconversion, run `scripts/setup-localstack` to set up the queues etc.
+3. From ds-caselaw-pdfconversion, run `docker-compose up --build` to launch the LibreOffice container
+   (`--build` will ensure the converter script is in the docker container)
