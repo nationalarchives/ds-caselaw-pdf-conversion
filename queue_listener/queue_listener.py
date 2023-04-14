@@ -89,8 +89,10 @@ def handle_message(message):
                 Bucket=bucket_name,
                 Key=upload_key,
                 Filename=pdf_filename,
-                ExtraArgs={"ContentType": "application/pdf",
-                            "Metadata": {"pdfsource": "pdf-conversion-libreoffice"}},
+                ExtraArgs={
+                    "ContentType": "application/pdf",
+                    "Metadata": {"pdfsource": "pdf-conversion-libreoffice"},
+                },
             )
             print(f"Uploaded {upload_key}")
         except FileNotFoundError as exception:
