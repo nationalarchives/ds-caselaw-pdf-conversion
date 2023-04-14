@@ -9,7 +9,10 @@ import rollbar
 
 dotenv.load_dotenv()
 
-rollbar.init(os.getenv("ROLLBAR_ACCESS_TOKEN"))
+rollbar.init(
+    os.getenv("ROLLBAR_ACCESS_TOKEN"),
+    environment=os.getenv("ROLLBAR_ENV", default="unknown"),
+)
 QUEUE_URL = os.getenv("QUEUE_URL")
 # should be UNSET whenever using actual AWS
 # but set if we're using localstack
@@ -69,7 +72,9 @@ def handle_message(message):
         upload_key = key_no_extension + ".pdf"
 
         if would_replace_custom_pdf(bucket_name, upload_key):
-            print(f"{upload_key} is from custom-pdfs, not replacing")
+            rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
+            rollbar.report_message(rollbar_message, "warning")
+            print(rollbar_message)
             continue
 
         print(f"Downloading {download_key}")
