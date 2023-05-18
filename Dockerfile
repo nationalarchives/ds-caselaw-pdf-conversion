@@ -12,7 +12,7 @@ RUN pip3 install --no-cache --upgrade pip setuptools wheel
 
 COPY ./docker_context/poetry.lock .
 COPY ./docker_context/pyproject.toml .
-RUN pip3 install poetry==1.1.11
+RUN pip3 install poetry==1.4.2
 RUN poetry config virtualenvs.create false \
   && poetry install --no-interaction --no-ansi
 
