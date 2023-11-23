@@ -8,7 +8,7 @@ authors = ["Laura Porter <laura@dxw.com>"]
 python = "^3.9.7"
 boto3 = "^1.24.0"
 python-dotenv = "^1.0.0"
-rollbar = "^0.16.3"
+rollbar = "^1.0.0"
 urllib3 = "<2"
 [tool.poetry.dev-dependencies]
 
