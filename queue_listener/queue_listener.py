@@ -78,15 +78,9 @@ def handle_message(message):
             continue
 
         print(f"Downloading {download_key}")
-        s3_client.download_file(
-            Bucket=bucket_name, Key=download_key, Filename=docx_filename
-        )
+        s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
-        print(
-            subprocess.run(
-                f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")
-            )
-        )
+        print(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
@@ -112,16 +106,12 @@ def handle_message(message):
                 pass
 
     # afterwards:
-    sqs_client.delete_message(
-        QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"]
-    )
+    sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
 
 
 def poll_once():
     print("Polling...")
-    messages_dict = sqs_client.receive_message(
-        QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS
-    )
+    messages_dict = sqs_client.receive_message(QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS)
     for message in messages_dict.get("Messages", []):
         handle_message(message)
 
