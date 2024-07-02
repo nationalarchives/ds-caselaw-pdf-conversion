@@ -27,6 +27,7 @@ To deploy to production:
 
 You can republish a PDF by uploading the PDF again, or by sending JSON of the form:
 
+```json
 {
   "Records": [
     {
@@ -40,8 +41,9 @@ You can republish a PDF by uploading the PDF again, or by sending JSON of the fo
         }
       }
     }
- ]
+  ]
 }
+```
 
 to the Send and Receive Messages page of the Simple Queuing System on AWS.
 
@@ -64,11 +66,13 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 Manual integration tests, having run Local Start up tasks above:
 
 You should see output like:
+
 ```
 Downloading judgment.docx
 ...
 Uploaded judgment.pdf
 ```
+
 on startup.
 
 Running `scripts/upload_custom_file.sh` will do nothing, but then `scripts/upload_file.sh` should not upload and display the message:
