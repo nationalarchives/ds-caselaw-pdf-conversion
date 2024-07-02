@@ -9,9 +9,7 @@ import queue_listener
 # TRUTHY
 @patch(
     "queue_listener.s3_client.head_object",
-    return_value={
-        "ResponseMetadata": {"HTTPHeaders": {"x-amz-meta-pdfsource": "custom-pdfs"}}
-    },
+    return_value={"ResponseMetadata": {"HTTPHeaders": {"x-amz-meta-pdfsource": "custom-pdfs"}}},
 )
 def test_would_replace_is_custom(head_object):
     """There is a pdfsource, but it is custom-pdfs"""
@@ -22,9 +20,7 @@ def test_would_replace_is_custom(head_object):
 # FALSEY
 @patch(
     "queue_listener.s3_client.head_object",
-    return_value={
-        "ResponseMetadata": {"HTTPHeaders": {"x-amz-meta-pdfsource": "kitten"}}
-    },
+    return_value={"ResponseMetadata": {"HTTPHeaders": {"x-amz-meta-pdfsource": "kitten"}}},
 )
 def test_would_replace_not_custom(head_object):
     """There is a pdfsource, but it isn't custom-pdfs"""
@@ -41,9 +37,7 @@ def test_would_replace_is_empty(head_object):
 
 @patch(
     "queue_listener.s3_client.head_object",
-    side_effect=ClientError(
-        error_response={"Error": {"Message": "Not Found"}}, operation_name=""
-    ),
+    side_effect=ClientError(error_response={"Error": {"Message": "Not Found"}}, operation_name=""),
 )
 def test_would_replace_is_not_found(head_object):
     """There is no such file, so there's nothing to be worried about overwriting"""
@@ -54,9 +48,7 @@ def test_would_replace_is_not_found(head_object):
 # ERRORY
 @patch(
     "queue_listener.s3_client.head_object",
-    side_effect=ClientError(
-        error_response={"Error": {"Message": "Out Of Cheese"}}, operation_name=""
-    ),
+    side_effect=ClientError(error_response={"Error": {"Message": "Out Of Cheese"}}, operation_name=""),
 )
 def test_would_replace_is_bad_response(head_object):
     """An unexpected error occurred, so we re-raise"""
