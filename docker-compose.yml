@@ -9,9 +9,15 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
+      - AWS_REGION=us-west-1
     env_file:
       - ./.env
 
+
+    ports:
+      - 4822:4822
+      - 3000:3000
+      - 3001:3001
     volumes:
       - ./data:/data:z
     restart: unless-stopped

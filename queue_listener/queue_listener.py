@@ -13,11 +13,25 @@ rollbar.init(
     os.getenv("ROLLBAR_ACCESS_TOKEN"),
     environment=os.getenv("ROLLBAR_ENV", default="unknown"),
 )
+
+print (os.environ)
+
+AWS_REGION = "us-west-1"
+
+os.environ["QUEUE_URL"]="http://localhost:4566/000000000000/pdf-conversion-queue"
+os.environ["AWS_ACCESS_KEY_ID"]="123"
+os.environ["AWS_SECRET_KEY"]="xyz"
+os.environ["AWS_SECRET_ACCESS_KEY"]="sdf"
+os.environ["AWS_REGION"]="us-east-1"
+os.environ["AWS_ENDPOINT_URL"]="http://host.docker.internal:4566"
+os.environ["PRIVATE_ASSET_BUCKET"]="private-asset-bucket"
 QUEUE_URL = os.getenv("QUEUE_URL")
 # should be UNSET whenever using actual AWS
 # but set if we're using localstack
 ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
+
+print (os.environ)
 POLL_SECONDS = 10
 sqs_client = boto3.client(
     "sqs",
@@ -108,6 +122,7 @@ def handle_message(message):
 
     # afterwards:
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
+    print (f"Done with {docx_filename}")
 
 
 def poll_once():
