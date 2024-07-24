@@ -78,6 +78,10 @@ Uploaded judgment.pdf
 
 on startup.
 
-Running `scripts/upload_custom_file.sh` will do nothing, but then `scripts/upload_file.sh` should not upload and display the message:
+#### Scripts
 
-`judgment.pdf is from custom-pdfs, not replacing`
+`upload_file` will upload a docx, which should generate a PDF
+
+`upload_custom_pdf` will upload a tagged PDF, which should cause `upload_file` to fail with `judgment.pdf is from custom-pdfs, not replacing`
+
+`upload_named_pdf` will upload a docx of your choosing
