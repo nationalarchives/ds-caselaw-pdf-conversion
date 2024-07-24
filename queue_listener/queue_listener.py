@@ -80,7 +80,8 @@ def handle_message(message):
         print(f"Downloading {download_key}")
         s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
-        print(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
+        # this could probably fail, we should do something about that
+        print(subprocess.run(f"timeout 30 soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
