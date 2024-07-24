@@ -1,11 +1,12 @@
 import json
 import os
 import subprocess
-
+import requests
 import boto3
 import botocore
 import dotenv
 import rollbar
+from time import sleep
 
 dotenv.load_dotenv()
 
@@ -95,7 +96,12 @@ def handle_message(message):
         s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
         # this could probably fail, we should do something about that
-        print(subprocess.run(f"timeout 30 soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
+        with open(docx_filename, "rb") as docx_handle:
+            response = requests.post("http://gotenberg:3000/forms/libreoffice/convert", files={"docx": docx_handle})
+        with open(pdf_filename, "wb") as pdf_handle:
+            pdf_handle.write(response.content)
+        print ("woo")
+        # print(subprocess.run(f"timeout 30 soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
@@ -119,10 +125,11 @@ def handle_message(message):
                 os.remove(file_to_delete)
             except FileNotFoundError:
                 pass
+        print (f"Done with {docx_filename}")
 
     # afterwards:
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
-    print (f"Done with {docx_filename}")
+
 
 
 def poll_once():
@@ -133,5 +140,16 @@ def poll_once():
 
 
 if __name__ == "__main__":
+    print("Awaiting gotenberg")
+    while True:
+        try:
+            response = requests.get("http://gotenberg:3000/forms/libreoffice/convert")
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+            sleep(2)
+        except:
+            raise
+        else:
+            break
     while True:
         poll_once()

@@ -1,23 +1,13 @@
 ---
 services:
-  libreoffice:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    hostname: gotenberg
+  queuelistener:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: libreoffice
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - AWS_REGION=us-west-1
+      dockerfile: queuelistener.dockerfile
+    depends_on: 
+      - gotenberg
     env_file:
       - ./.env
-
-
-    ports:
-      - 4822:4822
-      - 3000:3000
-      - 3001:3001
-    volumes:
-      - ./data:/data:z
-    restart: unless-stopped
