@@ -60,6 +60,8 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 4. From ds-caselaw-pdfconversion, run `docker-compose up --build` to launch the LibreOffice container
    (`--build` will ensure the converter script is in the docker container)
 
+You might want to look at the [localstack S3 bucket](http://localhost:4566/private-asset-bucket)
+
 ### Local testing
 
 `pytest queue_listener/tests.py` will run unit tests.
