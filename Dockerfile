@@ -1,4 +1,4 @@
-FROM lscr.io/linuxserver/libreoffice:6.4.6.2-r11-ls35 as libreoffice_base
+FROM lscr.io/linuxserver/libreoffice:7.2.2.2-r2-ls36 as libreoffice_base
 RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
