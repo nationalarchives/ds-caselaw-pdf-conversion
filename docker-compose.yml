@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: queuelistener.dockerfile
-    depends_on: 
+    depends_on:
       - gotenberg
     env_file:
       - ./.env

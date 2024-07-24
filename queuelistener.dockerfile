@@ -1,7 +1,7 @@
 FROM python:3.12
 COPY ./docker_context/poetry.lock .
 COPY ./docker_context/pyproject.toml .
-ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
+ENV PYTHONPATH=${PYTHONPATH}:${PWD}
 ENV PYTHONUNBUFFERED=1
 RUN pip3 install poetry
 RUN poetry config virtualenvs.create false
