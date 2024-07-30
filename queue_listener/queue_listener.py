@@ -105,6 +105,8 @@ def handle_message(message):
             except FileNotFoundError:
                 pass
 
+        print(f"Done with {docx_filename}")
+
     # afterwards:
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
 
