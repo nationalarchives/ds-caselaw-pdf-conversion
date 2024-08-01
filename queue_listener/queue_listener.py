@@ -7,17 +7,39 @@ import botocore
 import dotenv
 import rollbar
 
+import sys
+
+
+def eprint(*args, **kwargs):
+    print(*args, **kwargs, file=sys.stderr)
+
+
 dotenv.load_dotenv()
 
 rollbar.init(
     os.getenv("ROLLBAR_ACCESS_TOKEN"),
     environment=os.getenv("ROLLBAR_ENV", default="unknown"),
 )
+
+### this is bad
+AWS_REGION = "us-west-1"
+
+os.environ["QUEUE_URL"] = "http://localhost:4566/000000000000/pdf-conversion-queue"
+os.environ["AWS_ACCESS_KEY_ID"] = "123"
+os.environ["AWS_SECRET_KEY"] = "xyz"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "sdf"
+os.environ["AWS_REGION"] = "us-east-1"
+os.environ["AWS_ENDPOINT_URL"] = "http://host.docker.internal:4566"
+os.environ["PRIVATE_ASSET_BUCKET"] = "private-asset-bucket"
+###
+
+
 QUEUE_URL = os.getenv("QUEUE_URL")
 # should be UNSET whenever using actual AWS
 # but set if we're using localstack
 ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
+
 POLL_SECONDS = 10
 sqs_client = boto3.client(
     "sqs",
@@ -57,7 +79,7 @@ def would_replace_custom_pdf(bucket_name, upload_key):
 
 
 def handle_message(message):
-    print(message)
+    eprint(message)
     json_body = json.loads(message["Body"])
     for record in json_body.get("Records", []):
         bucket_name = record["s3"]["bucket"]["name"]  # or ['arn']
@@ -74,13 +96,15 @@ def handle_message(message):
         if would_replace_custom_pdf(bucket_name, upload_key):
             rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
             rollbar.report_message(rollbar_message, "warning")
-            print(rollbar_message)
+            eprint(rollbar_message)
             continue
 
-        print(f"Downloading {download_key}")
+        eprint(f"Downloading {download_key}")
         s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
-        print(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
+        # this could probably fail, we should do something about that
+
+        eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
@@ -93,11 +117,11 @@ def handle_message(message):
                     "Metadata": {"pdfsource": "pdf-conversion-libreoffice"},
                 },
             )
-            print(f"Uploaded {upload_key}")
+            eprint(f"Uploaded {upload_key}")
         except FileNotFoundError as exception:
-            print("LibreOffice probably didn't create a PDF for the input document.")
+            eprint("LibreOffice probably didn't create a PDF for the input document.")
             rollbar.report_exc_info()
-            print(exception)
+            eprint(exception)
 
         for file_to_delete in [pdf_filename, docx_filename]:
             try:
@@ -105,12 +129,14 @@ def handle_message(message):
             except FileNotFoundError:
                 pass
 
+        eprint(f"Done with {upload_key}")
+
     # afterwards:
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
 
 
 def poll_once():
-    print("Polling...")
+    eprint("Polling...")
     messages_dict = sqs_client.receive_message(QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS)
     for message in messages_dict.get("Messages", []):
         handle_message(message)

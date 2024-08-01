@@ -54,10 +54,13 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 
 ## Local setup
 
-1. From ds-caselaw-ingester, run `docker-compose up` to launch the Localstack container
-2. From ds-caselaw-pdfconversion, run `scripts/setup-localstack.sh` to set up the queues etc.
-3. From ds-caselaw-pdfconversion, run `docker-compose up --build` to launch the LibreOffice container
+1. Copy `.env.example` to `.env`
+2. From ds-caselaw-ingester, run `docker compose up` to launch the Localstack container
+3. From ds-caselaw-pdfconversion, run `scripts/setup-localstack.sh` to set up the queues etc.
+4. From ds-caselaw-pdfconversion, run `docker compose up --build` to launch the LibreOffice container
    (`--build` will ensure the converter script is in the docker container)
+
+You might want to look at the [localstack S3 bucket](http://localhost:4566/private-asset-bucket)
 
 ### Local testing
 
@@ -75,6 +78,10 @@ Uploaded judgment.pdf
 
 on startup.
 
-Running `scripts/upload_custom_file.sh` will do nothing, but then `scripts/upload_file.sh` should not upload and display the message:
+#### Scripts
 
-`judgment.pdf is from custom-pdfs, not replacing`
+`upload_file` will upload a docx, which should generate a PDF
+
+`upload_custom_pdf` will upload a tagged PDF, which should cause `upload_file` to fail with `judgment.pdf is from custom-pdfs, not replacing`
+
+`upload_named_pdf` will upload a docx of your choosing

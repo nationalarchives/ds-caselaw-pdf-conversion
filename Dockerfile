@@ -1,20 +1,16 @@
-FROM lscr.io/linuxserver/libreoffice:latest as libreoffice_base
+FROM lscr.io/linuxserver/libreoffice:7.6.7 AS libreoffice_base
 RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
 RUN apk add libffi libffi-dev build-base gcc python3-dev curl
 
-# Install python/pip
+# Install python/poetry
 ENV PYTHONUNBUFFERED=1
-RUN apk add --update --no-cache python3 && ln -sf python3 /usr/bin/python
-RUN python3 -m ensurepip
-RUN pip3 install --no-cache --upgrade pip setuptools wheel
-
+RUN curl -sSL https://install.python-poetry.org  | python3 -
 COPY ./docker_context/poetry.lock .
 COPY ./docker_context/pyproject.toml .
-RUN pip3 install poetry==1.4.2
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi
+RUN /config/.local/bin/poetry config virtualenvs.create false \
+  && /config/.local/bin/poetry install --no-interaction --no-ansi
 
 COPY ./queue_listener ./queue_listener
 COPY ./docker_context .
