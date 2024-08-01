@@ -1,11 +1,12 @@
 import json
 import os
 import subprocess
-
+import requests
 import boto3
 import botocore
 import dotenv
 import rollbar
+from time import sleep
 
 dotenv.load_dotenv()
 
@@ -13,11 +14,25 @@ rollbar.init(
     os.getenv("ROLLBAR_ACCESS_TOKEN"),
     environment=os.getenv("ROLLBAR_ENV", default="unknown"),
 )
+
+print(os.environ)
+
+AWS_REGION = "us-west-1"
+
+os.environ["QUEUE_URL"] = "http://localhost:4566/000000000000/pdf-conversion-queue"
+os.environ["AWS_ACCESS_KEY_ID"] = "123"
+os.environ["AWS_SECRET_KEY"] = "xyz"
+os.environ["AWS_SECRET_ACCESS_KEY"] = "sdf"
+os.environ["AWS_REGION"] = "us-east-1"
+os.environ["AWS_ENDPOINT_URL"] = "http://host.docker.internal:4566"
+os.environ["PRIVATE_ASSET_BUCKET"] = "private-asset-bucket"
 QUEUE_URL = os.getenv("QUEUE_URL")
 # should be UNSET whenever using actual AWS
 # but set if we're using localstack
 ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
 AWS_REGION = os.getenv("AWS_REGION")
+
+print(os.environ)
 POLL_SECONDS = 10
 sqs_client = boto3.client(
     "sqs",
@@ -80,7 +95,13 @@ def handle_message(message):
         print(f"Downloading {download_key}")
         s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
-        print(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
+        # this could probably fail, we should do something about that
+        with open(docx_filename, "rb") as docx_handle:
+            response = requests.post("http://gotenberg:3000/forms/libreoffice/convert", files={"docx": docx_handle})
+        with open(pdf_filename, "wb") as pdf_handle:
+            pdf_handle.write(response.content)
+        print("woo")
+        # print(subprocess.run(f"timeout 30 soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" ")))
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
@@ -104,6 +125,7 @@ def handle_message(message):
                 os.remove(file_to_delete)
             except FileNotFoundError:
                 pass
+        print(f"Done with {docx_filename}")
 
     # afterwards:
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
@@ -117,5 +139,16 @@ def poll_once():
 
 
 if __name__ == "__main__":
+    print("Awaiting gotenberg")
+    while True:
+        try:
+            response = requests.get("http://gotenberg:3000/forms/libreoffice/convert")
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+            sleep(2)
+        except:
+            raise
+        else:
+            break
     while True:
         poll_once()
