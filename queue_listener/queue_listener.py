@@ -21,19 +21,6 @@ rollbar.init(
     environment=os.getenv("ROLLBAR_ENV", default="unknown"),
 )
 
-### this is bad
-AWS_REGION = "us-west-1"
-
-os.environ["QUEUE_URL"] = "http://localhost:4566/000000000000/pdf-conversion-queue"
-os.environ["AWS_ACCESS_KEY_ID"] = "123"
-os.environ["AWS_SECRET_KEY"] = "xyz"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "sdf"
-os.environ["AWS_REGION"] = "us-east-1"
-os.environ["AWS_ENDPOINT_URL"] = "http://host.docker.internal:4566"
-os.environ["PRIVATE_ASSET_BUCKET"] = "private-asset-bucket"
-###
-
-
 QUEUE_URL = os.getenv("QUEUE_URL")
 # should be UNSET whenever using actual AWS
 # but set if we're using localstack
