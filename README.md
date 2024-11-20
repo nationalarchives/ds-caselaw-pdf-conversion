@@ -85,3 +85,9 @@ on startup.
 `upload_custom_pdf` will upload a tagged PDF, which should cause `upload_file` to fail with `judgment.pdf is from custom-pdfs, not replacing`
 
 `upload_named_pdf` will upload a docx of your choosing
+
+### Verifying font fallback in place
+
+The output of `fc-match gibberish` should be something like
+
+> `Times_New_Roman.ttf: "Times New Roman" "Regular"`
