@@ -224,13 +224,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rollbar"
-version = "1.0.0"
+version = "1.1.0"
 description = "Easy and powerful exception tracking with Rollbar. Send messages and exceptions with arbitrary context, get back aggregates, and debug production issues quickly."
 optional = false
-python-versions = "*"
+python-versions = ">=3.6"
 files = [
-    {file = "rollbar-1.0.0-py3-none-any.whl", hash = "sha256:b7831cd8f2d2384e5922cdfb18897890c4ac4609fddfd2a821efe17b92cf1e58"},
-    {file = "rollbar-1.0.0.tar.gz", hash = "sha256:6347b7e49f22f0296fc287a6aea75d642cf64494d2ee127042a7a593c97df3af"},
+    {file = "rollbar-1.1.0-py3-none-any.whl", hash = "sha256:a39634cdd53a8ae3ebdb850c0075da8fd88154bea356acee738b52aef79ec384"},
+    {file = "rollbar-1.1.0.tar.gz", hash = "sha256:0894302f7caf3d1f16c84ae3d609dc6385fcdba95ae78c9af1f4809a7dd44a89"},
 ]
 
 [package.dependencies]
