@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@master
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
       - name: Run latest-tag
-        uses: EndBug/latest-tag@latest
+        uses: EndBug/latest-tag@7589411ebda7bc8f98deb2dbc37e3dc45828f7d0 # v1.6.2
         with:
-          tag-name: production
+          ref: production
           force-branch: true
