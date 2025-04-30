@@ -2,7 +2,7 @@
 version: "2.1"
 services:
   localstack:
-    image: localstack/localstack@sha256:011f2892c360dd0332e3a2d9be2703fed3a6772161caa534920c7103713d9b74
+    image: localstack/localstack@sha256:510aa86a5f1415e67666abc3a9877b96b7180a87a94d3cbac2226047230a2f8d
     network_mode: bridge
     environment:
       SERVICES: sns,s3,sqs
