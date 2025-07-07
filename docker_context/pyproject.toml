@@ -1,5 +1,6 @@
 [tool.poetry]
 name = "libreoffice-with-msfonts"
+package-mode = false
 version = "0.1.0"
 description = ""
 authors = ["Laura Porter <laura@dxw.com>"]
