@@ -30,5 +30,4 @@ RUN mkdir -p /usr/share/fonts/truetype/docker-context
 RUN find /fonts/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/docker-context/ \; || return 1
 RUN fc-cache -f && rm -rf /var/cache/*
 
-ENV QUEUE_ARN=${QUEUE_ARN}
 CMD ["python", "queue_listener/queue_listener.py"]
