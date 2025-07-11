@@ -81,4 +81,4 @@ jobs:
           docker run \
             --user root \
             pdf-conversion:${{ github.run_id }} \
-            poetry run pytest queue_listener/tests.py -v
+            /etc/poetry/bin/poetry run pytest queue_listener/tests.py -v
