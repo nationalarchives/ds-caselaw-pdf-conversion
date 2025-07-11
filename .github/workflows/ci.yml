@@ -26,7 +26,7 @@ jobs:
         env:
           SKIP: no-commit-to-branch
 
-  docker-build:
+  docker-build-and-test:
     needs: linter
     runs-on: ubuntu-latest
     steps:
@@ -47,35 +47,6 @@ jobs:
           tags: pdf-conversion:${{ github.run_id }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Save Docker image
-        run: |
-          docker save pdf-conversion:${{ github.run_id }} > image.tar
-
-      - name: Upload Docker image
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        with:
-          name: docker-image
-          path: image.tar
-
-  test:
-    needs: docker-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code Repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-        with:
-          persist-credentials: false
-
-      - name: Download Docker image
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: docker-image
-
-      - name: Load Docker image
-        run: |
-          docker load < image.tar
-
       - name: Run tests in Docker container
         run: |
           docker run \
