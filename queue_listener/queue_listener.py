@@ -14,33 +14,7 @@ def eprint(*args, **kwargs):
     print(*args, **kwargs, file=sys.stderr)
 
 
-dotenv.load_dotenv()
-
-rollbar.init(
-    os.getenv("ROLLBAR_ACCESS_TOKEN"),
-    environment=os.getenv("ROLLBAR_ENV", default="unknown"),
-)
-
-QUEUE_URL = os.getenv("QUEUE_URL")
-# should be UNSET whenever using actual AWS
-# but set if we're using localstack
-ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
-AWS_REGION = os.getenv("AWS_REGION")
-
-POLL_SECONDS = 10
-sqs_client = boto3.client(
-    "sqs",
-    region_name=AWS_REGION,
-    endpoint_url=ENDPOINT_URL,
-)
-s3_client = boto3.client(
-    "s3",
-    region_name=AWS_REGION,
-    endpoint_url=ENDPOINT_URL,
-)
-
-
-def would_replace_custom_pdf(bucket_name, upload_key):
+def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     """
     If a PDF file with the target name already exists, and has metadata of 'custom-pdfs',
     we should not overwrite the file with an automatically generated PDF.
@@ -67,6 +41,7 @@ def would_replace_custom_pdf(bucket_name, upload_key):
 
 def handle_message(message):
     eprint(message)
+
     json_body = json.loads(message["Body"])
     for record in json_body.get("Records", []):
         bucket_name = record["s3"]["bucket"]["name"]  # or ['arn']
@@ -80,7 +55,7 @@ def handle_message(message):
         key_no_extension = ".".join(download_key.split(".")[:-1])
         upload_key = key_no_extension + ".pdf"
 
-        if would_replace_custom_pdf(bucket_name, upload_key):
+        if would_replace_custom_pdf(s3_client, bucket_name, upload_key):
             rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
             rollbar.report_message(rollbar_message, "warning")
             eprint(rollbar_message)
@@ -122,13 +97,39 @@ def handle_message(message):
     sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
 
 
-def poll_once():
+def poll_once(sqs_client, queue_url):
     eprint("Polling...")
-    messages_dict = sqs_client.receive_message(QueueUrl=QUEUE_URL, WaitTimeSeconds=POLL_SECONDS)
+    poll_time_seconds = 10
+    messages_dict = sqs_client.receive_message(QueueUrl=queue_url, WaitTimeSeconds=poll_time_seconds)
     for message in messages_dict.get("Messages", []):
         handle_message(message)
 
 
 if __name__ == "__main__":
+    dotenv.load_dotenv()
+
+    rollbar.init(
+        os.getenv("ROLLBAR_ACCESS_TOKEN"),
+        environment=os.getenv("ROLLBAR_ENV", default="unknown"),
+    )
+
+    # should be UNSET whenever using actual AWS
+    # but set if we're using localstack
+    ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
+    AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
+
+    s3_client = boto3.client(
+        "s3",
+        region_name=AWS_DEFAULT_REGION,
+        endpoint_url=ENDPOINT_URL,
+    )
+
+    sqs_client = boto3.client(
+        "sqs",
+        region_name=AWS_DEFAULT_REGION,
+        endpoint_url=ENDPOINT_URL,
+    )
+    QUEUE_URL = os.getenv("QUEUE_URL")
+
     while True:
-        poll_once()
+        poll_once(sqs_client, QUEUE_URL)
