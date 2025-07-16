@@ -62,15 +62,39 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 
 You might want to look at the [localstack S3 bucket](http://localhost:4566/private-asset-bucket)
 
-### Local testing
+### Tests
 
-`pytest queue_listener/tests.py` will run unit tests.
+The project has both unit tests and integration tests. Integration tests require LibreOffice to be installed as they test the actual PDF conversion process.
 
-Manual integration tests, having run Local Start up tasks above:
+#### Running Tests
 
-You should see output like:
+We provide a convenience script that can run tests either locally or in Docker:
 
+```bash
+# Run all tests in Docker (recommended - matches CI environment)
+# This includes both unit and integration tests as Docker image has LibreOffice installed
+./run-tests.sh docker
+
+# Run tests locally using Poetry
+# Note: Integration tests are skipped
+./run-tests.sh local
+
+# Run specific test files
+./run-tests.sh docker -- -k test_unit.py  # Run only unit tests
+./run-tests.sh docker -- -k test_integration.py  # Run only integration tests
 ```
+
+The Docker approach is recommended as it:
+
+- Matches the CI environment exactly
+- Includes all required dependencies (LibreOffice, fonts, etc.)
+- Ensures consistent test environment across all developers
+
+#### Manual Integration Testing
+
+Having run Local Setup tasks above, you should see output like:
+
+```shell
 Downloading judgment.docx
 ...
 Uploaded judgment.pdf

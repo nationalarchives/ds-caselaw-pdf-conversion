@@ -39,7 +39,7 @@ def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
-def handle_message(message):
+def handle_message(s3_client, sqs_client, queue_url, message):
     eprint(message)
 
     json_body = json.loads(message["Body"])
@@ -94,18 +94,18 @@ def handle_message(message):
         eprint(f"Done with {upload_key}")
 
     # afterwards:
-    sqs_client.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=message["ReceiptHandle"])
+    sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"])
 
 
-def poll_once(sqs_client, queue_url):
+def poll_once(s3_client, sqs_client, queue_url):
     eprint("Polling...")
     poll_time_seconds = 10
     messages_dict = sqs_client.receive_message(QueueUrl=queue_url, WaitTimeSeconds=poll_time_seconds)
     for message in messages_dict.get("Messages", []):
-        handle_message(message)
+        handle_message(s3_client, sqs_client, queue_url, message)
 
 
-if __name__ == "__main__":
+def queue_listener():
     dotenv.load_dotenv()
 
     rollbar.init(
@@ -115,21 +115,23 @@ if __name__ == "__main__":
 
     # should be UNSET whenever using actual AWS
     # but set if we're using localstack
-    ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL")
-    AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
+    endpoint_url = os.getenv("AWS_ENDPOINT_URL")
 
     s3_client = boto3.client(
         "s3",
-        region_name=AWS_DEFAULT_REGION,
-        endpoint_url=ENDPOINT_URL,
+        endpoint_url=endpoint_url,
     )
 
     sqs_client = boto3.client(
         "sqs",
-        region_name=AWS_DEFAULT_REGION,
-        endpoint_url=ENDPOINT_URL,
+        endpoint_url=endpoint_url,
     )
-    QUEUE_URL = os.getenv("QUEUE_URL")
+
+    queue_url = os.getenv("QUEUE_URL")
 
     while True:
-        poll_once(sqs_client, QUEUE_URL)
+        poll_once(s3_client, sqs_client, queue_url)
+
+
+if __name__ == "__main__":
+    queue_listener()
