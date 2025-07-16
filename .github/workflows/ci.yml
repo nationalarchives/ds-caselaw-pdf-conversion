@@ -48,8 +48,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Run tests in Docker container
-        run: |
-          docker run \
-            --user root \
-            pdf-conversion:${{ github.run_id }} \
-            /etc/poetry/bin/poetry run pytest queue_listener/tests.py -v
+        run: ./run-tests.sh docker ${{ github.run_id }}

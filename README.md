@@ -62,15 +62,60 @@ file for you, if you want to remake every PDF that's backed by a docx file.
 
 You might want to look at the [localstack S3 bucket](http://localhost:4566/private-asset-bucket)
 
-### Local testing
+### Tests
 
-`pytest queue_listener/tests.py` will run unit tests.
+The project contains both unit tests and integration tests:
 
-Manual integration tests, having run Local Start up tasks above:
+- Unit tests: Basic functionality testing
+- Integration tests: Full PDF conversion testing (requires LibreOffice)
 
-You should see output like:
+#### Running Tests
 
+We provide a convenience script that can run tests either locally or in Docker:
+
+```bash
+# Run unit tests locally using Poetry
+./run-tests.sh local
+
+# Run all tests in Docker (recommended)
+./run-tests.sh docker
+
+# Run Docker tests with a specific tag (useful for CI/CD)
+./run-tests.sh docker my-feature-branch
+
+# Run specific test files
+./run-tests.sh docker -- -k test_unit.py  # Run only unit tests
+./run-tests.sh docker -- -k test_integration.py  # Run only integration tests
 ```
+
+The Docker approach is recommended as it:
+
+- Matches the CI environment exactly
+- Includes all required dependencies (LibreOffice, fonts, etc.)
+- Ensures consistent test environment across all developers
+- Uses Docker layer caching for faster builds
+- Automatically cleans up containers after test runs
+
+#### Test Execution Details
+
+- Local mode (`./run-tests.sh local`):
+  - Runs unit tests only
+  - Uses local Poetry installation
+  - Quick for development
+  - No LibreOffice required
+
+- Docker mode (`./run-tests.sh docker`):
+  - Runs both unit and integration tests
+  - Builds and uses a Docker image
+  - Includes LibreOffice for PDF conversion
+  - Uses buildx caching when available
+  - Automatically removes containers after testing
+
+#### Manual Integration Testing
+
+Having run Local Setup tasks above, you should see output like:
+
+```shell
 Downloading judgment.docx
 ...
 Uploaded judgment.pdf
