@@ -64,20 +64,24 @@ You might want to look at the [localstack S3 bucket](http://localhost:4566/priva
 
 ### Tests
 
-The project has both unit tests and integration tests. Integration tests require LibreOffice to be installed as they test the actual PDF conversion process.
+The project contains both unit tests and integration tests:
+
+- Unit tests: Basic functionality testing
+- Integration tests: Full PDF conversion testing (requires LibreOffice)
 
 #### Running Tests
 
 We provide a convenience script that can run tests either locally or in Docker:
 
 ```bash
-# Run all tests in Docker (recommended - matches CI environment)
-# This includes both unit and integration tests as Docker image has LibreOffice installed
+# Run unit tests locally using Poetry
+./run-tests.sh local
+
+# Run all tests in Docker (recommended)
 ./run-tests.sh docker
 
-# Run tests locally using Poetry
-# Note: Integration tests are skipped
-./run-tests.sh local
+# Run Docker tests with a specific tag (useful for CI/CD)
+./run-tests.sh docker my-feature-branch
 
 # Run specific test files
 ./run-tests.sh docker -- -k test_unit.py  # Run only unit tests
@@ -89,6 +93,23 @@ The Docker approach is recommended as it:
 - Matches the CI environment exactly
 - Includes all required dependencies (LibreOffice, fonts, etc.)
 - Ensures consistent test environment across all developers
+- Uses Docker layer caching for faster builds
+- Automatically cleans up containers after test runs
+
+#### Test Execution Details
+
+- Local mode (`./run-tests.sh local`):
+  - Runs unit tests only
+  - Uses local Poetry installation
+  - Quick for development
+  - No LibreOffice required
+
+- Docker mode (`./run-tests.sh docker`):
+  - Runs both unit and integration tests
+  - Builds and uses a Docker image
+  - Includes LibreOffice for PDF conversion
+  - Uses buildx caching when available
+  - Automatically removes containers after testing
 
 #### Manual Integration Testing
 

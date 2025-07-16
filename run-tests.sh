@@ -9,9 +9,17 @@ function run_local() {
 }
 
 function run_docker() {
+    local tag=${1:-local}
     echo "Running integration and unit tests in Docker container..."
-    docker build -t pdf-conversion:local .
-    docker run --rm --user root pdf-conversion:local /etc/poetry/bin/poetry run pytest queue_listener/ -vvvv
+    if ! docker image inspect pdf-conversion:${tag} >/dev/null 2>&1; then
+        echo "Image not found locally, building..."
+        if docker buildx version >/dev/null 2>&1; then
+            docker buildx build --load -t pdf-conversion:${tag} .
+        else
+            docker build -t pdf-conversion:${tag} .
+        fi
+    fi
+    docker run --rm --user root pdf-conversion:${tag} /etc/poetry/bin/poetry run pytest queue_listener/ -vvvv
 }
 
 case "$1" in
@@ -19,7 +27,7 @@ case "$1" in
         run_local
         ;;
     "docker")
-        run_docker
+        run_docker "${2:-local}"  # Pass optional tag parameter
         ;;
     *)
         echo "Usage: ./run-tests.sh [local|docker]"
