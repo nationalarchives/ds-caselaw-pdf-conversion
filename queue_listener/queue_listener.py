@@ -1,7 +1,7 @@
 import json
 import os
 import subprocess
-
+from subprocess import PIPE, STDOUT
 import boto3
 import botocore
 import dotenv
@@ -39,18 +39,24 @@ def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
-def transform_docx(docx_filename, pdf_filename):
+def transform_docx(docx_filename, pdf_filename, verify_removal=True):
     """Run libreoffice to generate a pdf from a docx"""
-    eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
+    eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30, check=True))
 
     # assert that there is now a file /tmp/pdf_filename
     if not os.path.exists(pdf_filename):
         raise RuntimeError(f"No pdf found at {pdf_filename}")
 
-    # unlink the metadata for the PDF and linearize to remove it
+    # Add a blank metadata update to the PDF and linearize it to remove it entirely
     # both write back to pdf_filename
-    subprocess.run(["exiftool", "-all:all=", pdf_filename], timeout=10)
-    subprocess.run(["qpdf", "--linearize", "--replace-input", pdf_filename], timeout=10)
+    subprocess.run(["exiftool", "-all:all=", pdf_filename], timeout=10, check=True)
+    subprocess.run(["qpdf", "--linearize", "--replace-input", pdf_filename], timeout=10, check=True)
+
+    if verify_removal:
+        # attempting to restore metadata will fail if we've linearized -- good!
+        output = subprocess.run(["exiftool", "-pdf-update:all=", pdf_filename], stdout=PIPE, stderr=STDOUT, timeout=10)
+        if b"no previous ExifTool update" not in output.stdout:
+            raise RuntimeError(f"ExifTool data reversable")
 
 
 def handle_message(s3_client, sqs_client, queue_url, message):
