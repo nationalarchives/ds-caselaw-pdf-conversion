@@ -3,6 +3,7 @@ RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
 RUN apk add libffi libffi-dev build-base gcc python3-dev curl
+RUN apk add exiftool qpdf
 
 # Install python/poetry
 ENV PYTHONUNBUFFERED=1

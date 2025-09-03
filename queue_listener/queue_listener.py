@@ -39,6 +39,20 @@ def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
+def transform_docx(docx_filename, pdf_filename):
+    """Run libreoffice to generate a pdf from a docx"""
+    eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
+
+    # assert that there is now a file /tmp/pdf_filename
+    if not os.path.exists(pdf_filename):
+        raise RuntimeError(f"No pdf found at {pdf_filename}")
+
+    # unlink the metadata for the PDF and linearize to remove it
+    # both write back to pdf_filename
+    subprocess.run(["exiftool", "-all:all=", pdf_filename], timeout=10)
+    subprocess.run(["qpdf", "--linearize", "--replace-input", pdf_filename], timeout=10)
+
+
 def handle_message(s3_client, sqs_client, queue_url, message):
     eprint(message)
 
@@ -63,10 +77,7 @@ def handle_message(s3_client, sqs_client, queue_url, message):
 
         eprint(f"Downloading {download_key}")
         s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
-
-        # this could probably fail, we should do something about that
-
-        eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
+        transform_docx(docx_filename, pdf_filename)
 
         # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
         try:
