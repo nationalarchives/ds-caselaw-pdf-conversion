@@ -149,6 +149,7 @@ class TestHandleMessage:
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 0
+            mock_run.return_value.stdout = b"no previous ExifTool update"
             # Create a mock PDF file that LibreOffice would create
             with open(f"/tmp/abc123.pdf", "w") as f:
                 f.write("mock pdf content")
