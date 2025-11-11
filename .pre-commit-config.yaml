@@ -15,7 +15,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.11
+    rev: v0.14.4
     hooks:
       - id: ruff-format
 
@@ -26,6 +26,6 @@ repos:
         types_or: [yaml, json, xml, markdown, scss, javascript]
 
   - repo: https://github.com/woodruffw/zizmor-pre-commit
-    rev: v1.12.1
+    rev: v1.16.3
     hooks:
       - id: zizmor
