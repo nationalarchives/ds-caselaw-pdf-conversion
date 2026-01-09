@@ -43,55 +43,63 @@ def handle_message(s3_client, sqs_client, queue_url, message):
     eprint(message)
 
     json_body = json.loads(message["Body"])
-    for record in json_body.get("Records", []):
-        bucket_name = record["s3"]["bucket"]["name"]  # or ['arn']
-        download_key = record["s3"]["object"]["key"]
-        etag = record["s3"]["object"]["eTag"].replace('"', "")
-        docx_filename = f"/tmp/{etag}.docx"
-        pdf_filename = f"/tmp/{etag}.pdf"
+    for sqs_record in json_body.get("Records", []):
+        # Parse the SQS body
+        sqs_body = json.loads(sqs_record["body"])
 
-        # split on dots, remove last part and recombine with dots again
-        # to have net effect of removing extension
-        key_no_extension = ".".join(download_key.split(".")[:-1])
-        upload_key = key_no_extension + ".pdf"
+        # Extract the SNS message
+        sns_message = json.loads(sqs_body["Message"])
 
-        if would_replace_custom_pdf(s3_client, bucket_name, upload_key):
-            rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
-            rollbar.report_message(rollbar_message, "warning")
-            eprint(rollbar_message)
-            continue
+        # process each S3 event(s) from the SNS message
+        for s3_record in sns_message["Records"]:
+            bucket_name = s3_record["s3"]["bucket"]["name"]  # or ['arn']
+            download_key = s3_record["s3"]["object"]["key"]
+            etag = s3_record["s3"]["object"]["eTag"].replace('"', "")
+            docx_filename = f"/tmp/{etag}.docx"
+            pdf_filename = f"/tmp/{etag}.pdf"
 
-        eprint(f"Downloading {download_key}")
-        s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
+            # split on dots, remove last part and recombine with dots again
+            # to have net effect of removing extension
+            key_no_extension = ".".join(download_key.split(".")[:-1])
+            upload_key = key_no_extension + ".pdf"
 
-        # this could probably fail, we should do something about that
+            if would_replace_custom_pdf(s3_client, bucket_name, upload_key):
+                rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
+                rollbar.report_message(rollbar_message, "warning")
+                eprint(rollbar_message)
+                continue
 
-        eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
+            eprint(f"Downloading {download_key}")
+            s3_client.download_file(Bucket=bucket_name, Key=download_key, Filename=docx_filename)
 
-        # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
-        try:
-            s3_client.upload_file(
-                Bucket=bucket_name,
-                Key=upload_key,
-                Filename=pdf_filename,
-                ExtraArgs={
-                    "ContentType": "application/pdf",
-                    "Metadata": {"pdfsource": "pdf-conversion-libreoffice"},
-                },
-            )
-            eprint(f"Uploaded {upload_key}")
-        except FileNotFoundError as exception:
-            eprint("LibreOffice probably didn't create a PDF for the input document.")
-            rollbar.report_exc_info()
-            eprint(exception)
+            # this could probably fail, we should do something about that
 
-        for file_to_delete in [pdf_filename, docx_filename]:
+            eprint(subprocess.run(f"soffice --convert-to pdf {docx_filename} --outdir /tmp".split(" "), timeout=30))
+
+            # NOTE: there's a risk that the local pdf file doesn't exist, we need to handle that case.
             try:
-                os.remove(file_to_delete)
-            except FileNotFoundError:
-                pass
+                s3_client.upload_file(
+                    Bucket=bucket_name,
+                    Key=upload_key,
+                    Filename=pdf_filename,
+                    ExtraArgs={
+                        "ContentType": "application/pdf",
+                        "Metadata": {"pdfsource": "pdf-conversion-libreoffice"},
+                    },
+                )
+                eprint(f"Uploaded {upload_key}")
+            except FileNotFoundError as exception:
+                eprint("LibreOffice probably didn't create a PDF for the input document.")
+                rollbar.report_exc_info()
+                eprint(exception)
 
-        eprint(f"Done with {upload_key}")
+            for file_to_delete in [pdf_filename, docx_filename]:
+                try:
+                    os.remove(file_to_delete)
+                except FileNotFoundError:
+                    pass
+
+            eprint(f"Done with {upload_key}")
 
     # afterwards:
     sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=message["ReceiptHandle"])
