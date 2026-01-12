@@ -7,7 +7,7 @@ import json
 import os
 from unittest.mock import patch
 
-from queue_listener import handle_message, poll_once, queue_listener, would_replace_custom_pdf
+from queue_listener import handle_message, poll_once, queue_listener, should_skip_file, would_replace_custom_pdf
 
 
 @mock_aws
@@ -21,11 +21,7 @@ class TestWouldReplaceCustomPdf:
         Then it should return True
         """
         s3_client = boto3.client("s3")
-
-        # Create the bucket
-        s3_client.create_bucket(
-            Bucket="test-bucket",
-        )
+        s3_client.create_bucket(Bucket="test-bucket")
 
         # Setup test file with custom-pdfs metadata
         s3_client.put_object(
@@ -43,13 +39,9 @@ class TestWouldReplaceCustomPdf:
         When would_replace_custom_pdf is called
         Then it should return False
         """
-        # Setup test file with different metadata
         s3_client = boto3.client("s3")
+        s3_client.create_bucket(Bucket="test-bucket")
 
-        # Create the bucket
-        s3_client.create_bucket(
-            Bucket="test-bucket",
-        )
         s3_client.put_object(
             Bucket="test-bucket",
             Key="test.pdf",
@@ -66,10 +58,7 @@ class TestWouldReplaceCustomPdf:
         Then it should return False
         """
         s3_client = boto3.client("s3")
-
-        s3_client.create_bucket(
-            Bucket="test-bucket",
-        )
+        s3_client.create_bucket(Bucket="test-bucket")
 
         # Setup test file with no metadata
         s3_client.put_object(
@@ -87,11 +76,7 @@ class TestWouldReplaceCustomPdf:
         Then it should return False
         """
         s3_client = boto3.client("s3")
-
-        # Create the bucket
-        s3_client.create_bucket(
-            Bucket="test-bucket",
-        )
+        s3_client.create_bucket(Bucket="test-bucket")
 
         assert not would_replace_custom_pdf(s3_client, "test-bucket", "nonexistent.pdf")
 
@@ -104,6 +89,72 @@ class TestWouldReplaceCustomPdf:
         s3_client = boto3.client("s3")
         with pytest.raises(ClientError):
             would_replace_custom_pdf(s3_client, "test-bucket", "test.pdf")
+
+
+@mock_aws
+class TestShouldSkipFile:
+    """Test the should_skip_file function"""
+
+    def test_when_file_has_no_tags_then_returns_true(self):
+        """
+        Given a docx file with no tags
+        When should_skip_file is called
+        Then it should return True (skip - waiting for cleansing)
+        """
+        s3_client = boto3.client("s3")
+        s3_client.create_bucket(Bucket="test-bucket")
+        s3_client.put_object(Bucket="test-bucket", Key="test.docx", Body=b"test content")
+
+        assert should_skip_file(s3_client, "test-bucket", "test.docx")
+
+    def test_when_file_has_document_processor_version_then_returns_false(self):
+        """
+        Given a docx file with DOCUMENT_PROCESSOR_VERSION tag
+        When should_skip_file is called
+        Then it should return False (process - file is cleaned)
+        """
+        s3_client = boto3.client("s3")
+        s3_client.create_bucket(Bucket="test-bucket")
+        s3_client.put_object(Bucket="test-bucket", Key="test.docx", Body=b"test content")
+
+        # Tag with document processor version (cleaned)
+        s3_client.put_object_tagging(
+            Bucket="test-bucket",
+            Key="test.docx",
+            Tagging={"TagSet": [{"Key": "DOCUMENT_PROCESSOR_VERSION", "Value": "1.0.0"}]},
+        )
+
+        assert not should_skip_file(s3_client, "test-bucket", "test.docx")
+
+    def test_when_file_missing_document_processor_version_then_returns_true(self):
+        """
+        Given a docx file without DOCUMENT_PROCESSOR_VERSION tag
+        When should_skip_file is called
+        Then it should return True (skip - not cleaned yet)
+        """
+        s3_client = boto3.client("s3")
+        s3_client.create_bucket(Bucket="test-bucket")
+        s3_client.put_object(Bucket="test-bucket", Key="test.docx", Body=b"test content")
+
+        # Tag with some other tag but not document processor version
+        s3_client.put_object_tagging(
+            Bucket="test-bucket",
+            Key="test.docx",
+            Tagging={"TagSet": [{"Key": "OTHER_TAG", "Value": "value"}]},
+        )
+
+        assert should_skip_file(s3_client, "test-bucket", "test.docx")
+
+    def test_when_file_not_found_then_returns_true(self):
+        """
+        Given a file that does not exist
+        When should_skip_file is called
+        Then it should return True (skip to be safe)
+        """
+        s3_client = boto3.client("s3")
+        s3_client.create_bucket(Bucket="test-bucket")
+
+        assert should_skip_file(s3_client, "test-bucket", "nonexistent.docx")
 
 
 @pytest.fixture
@@ -124,8 +175,13 @@ class TestHandleMessage:
     def test_handle_message_successful_conversion(self, test_file, aws_setup):
         s3_client, sqs_client, queue_url = aws_setup
 
-        # Upload test document to S3
+        # Upload test document to S3 with DOCUMENT_PROCESSOR_VERSION tag (cleaned file)
         s3_client.put_object(Bucket="test-bucket", Key="test-document.docx", Body="test content")
+        s3_client.put_object_tagging(
+            Bucket="test-bucket",
+            Key="test-document.docx",
+            Tagging={"TagSet": [{"Key": "DOCUMENT_PROCESSOR_VERSION", "Value": "2.0.0"}]},
+        )
 
         # Create and send message to SQS
         message_body = json.dumps(
@@ -159,8 +215,53 @@ class TestHandleMessage:
         response = s3_client.head_object(Bucket="test-bucket", Key="test-document.pdf")
         assert response["Metadata"]["pdfsource"] == "pdf-conversion-libreoffice"
 
+    def test_handle_message_skips_uncleaned_file(self, aws_setup):
+        """Test that files without DOCUMENT_PROCESSOR_VERSION tag are skipped"""
+        s3_client, sqs_client, queue_url = aws_setup
+
+        # Upload test document WITHOUT DOCUMENT_PROCESSOR_VERSION tag (not cleaned yet)
+        s3_client.put_object(Bucket="test-bucket", Key="test-document.docx", Body="test content")
+
+        # Create and send message to SQS
+        message_body = json.dumps(
+            {
+                "Records": [
+                    {
+                        "s3": {
+                            "bucket": {"name": "test-bucket"},
+                            "object": {"key": "test-document.docx", "eTag": '"abc123"'},
+                        }
+                    }
+                ]
+            }
+        )
+
+        sqs_client.send_message(QueueUrl=queue_url, MessageBody=message_body)
+
+        # Receive message to get valid receipt handle
+        response = sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=1)
+        message = response["Messages"][0]
+
+        with patch("subprocess.run") as mock_run:
+            handle_message(s3_client, sqs_client, queue_url, message)
+            # subprocess should not be called since file should be skipped
+            mock_run.assert_not_called()
+
+        # Verify PDF was NOT created
+        with pytest.raises(ClientError) as exc_info:
+            s3_client.head_object(Bucket="test-bucket", Key="test-document.pdf")
+        assert exc_info.value.response["Error"]["Code"] == "404"
+
     def test_handle_message_with_existing_custom_pdf(self, aws_setup):
         s3_client, sqs_client, queue_url = aws_setup
+
+        # Create docx with proper tags (cleaned, not converted)
+        s3_client.put_object(Bucket="test-bucket", Key="test-document.docx", Body="test content")
+        s3_client.put_object_tagging(
+            Bucket="test-bucket",
+            Key="test-document.docx",
+            Tagging={"TagSet": [{"Key": "DOCUMENT_PROCESSOR_VERSION", "Value": "2.0.0"}]},
+        )
 
         # Create existing custom PDF
         s3_client.put_object(
