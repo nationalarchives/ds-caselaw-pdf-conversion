@@ -12,7 +12,6 @@ def test_poll_once(aws_setup, test_file):
         - take the message off the SQS queue,
         - fetch the DOCX and convert it to PDF with `libreoffice` via a subprocess
         - finally upload the PDF back to the same S3 bucket
-        - tag the source docx with PDF_CONVERSION_VERSION
     """
     s3_client, sqs_client, queue_url = aws_setup
 
