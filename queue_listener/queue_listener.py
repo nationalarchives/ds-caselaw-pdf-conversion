@@ -39,41 +39,21 @@ def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
-def should_skip_file(s3_client, bucket_name, object_key):
+def has_been_cleansed(s3_client, bucket_name, object_key):
     """
-    Check if the docx file should be skipped by checking its tags.
-    Returns True if the file should be skipped, False if it should be processed.
-
-    Skips if:
-    - File hasn't been cleaned yet (no DOCUMENT_PROCESSOR_VERSION tag) - waiting for cleansing
+    Check if the docx file has been cleansed by checking its tags.
+    Returns:
+        - True if the file has been cleansed (has DOCUMENT_PROCESSOR_VERSION tag)
+        - False if it does not have the DOCUMENT_PROCESSOR_VERSION tag.
 
     Note: We check for the presence of DOCUMENT_PROCESSOR_VERSION but not its value.
-    Any version indicates the file has been cleaned. This allows PDFs to be automatically
-    regenerated when files are re-cleaned with a newer version of the document processor.
+    Any version indicates the file has been cleansed. This allows PDFs to be automatically
+    regenerated when files are re-cleansed with a newer version of the document processor.
     """
-    try:
-        # Get object tags
-        tags_response = s3_client.get_object_tagging(Bucket=bucket_name, Key=object_key)
-        tags = {tag["Key"]: tag["Value"] for tag in tags_response.get("TagSet", [])}
+    tags_response = s3_client.get_object_tagging(Bucket=bucket_name, Key=object_key)
+    tags = {tag["Key"]: tag["Value"] for tag in tags_response.get("TagSet", [])}
 
-        # Check: Has the file been cleaned by the document processor?
-        if "DOCUMENT_PROCESSOR_VERSION" not in tags:
-            eprint(
-                f"File {object_key} has not been cleaned yet (no DOCUMENT_PROCESSOR_VERSION tag). "
-                f"Skipping until cleansing process completes."
-            )
-            return True
-
-        # File is cleaned - proceed with processing
-        return False
-
-    except botocore.exceptions.ClientError as exception:
-        # If we can't get tags, skip processing to be safe (don't process uncleaned files)
-        if exception.response["Error"]["Code"] == "NoSuchTagSet":
-            eprint(f"No tags found for {object_key}. Skipping (assuming not cleaned yet).")
-            return True
-        eprint(f"Error getting tags for {object_key}: {exception}. Skipping to be safe.")
-        return True
+    return "DOCUMENT_PROCESSOR_VERSION" in tags
 
 
 def handle_message(s3_client, sqs_client, queue_url, message):
@@ -92,11 +72,13 @@ def handle_message(s3_client, sqs_client, queue_url, message):
         key_no_extension = ".".join(download_key.split(".")[:-1])
         upload_key = key_no_extension + ".pdf"
 
-        # Check if the docx file should be processed:
-        # - Skip if not cleaned yet (no DOCUMENT_PROCESSOR_VERSION tag)
-        if should_skip_file(s3_client, bucket_name, download_key):
+        # Check if the file should be processed:
+
+        # Skip if not cleansed yet
+        if not has_been_cleansed(s3_client, bucket_name, download_key):
             continue
 
+        # Skip if it would overwrite a custom PDF
         if would_replace_custom_pdf(s3_client, bucket_name, upload_key):
             rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
             rollbar.report_message(rollbar_message, "warning")

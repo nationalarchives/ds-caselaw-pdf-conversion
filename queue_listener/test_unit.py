@@ -7,7 +7,7 @@ import json
 import os
 from unittest.mock import patch
 
-from queue_listener import handle_message, poll_once, queue_listener, should_skip_file, would_replace_custom_pdf
+from queue_listener import handle_message, poll_once, has_been_cleansed, would_replace_custom_pdf
 
 
 @mock_aws
@@ -92,26 +92,26 @@ class TestWouldReplaceCustomPdf:
 
 
 @mock_aws
-class TestShouldSkipFile:
-    """Test the should_skip_file function"""
+class TestHasBeenCleansed:
+    """Test the has_been_cleansed function"""
 
-    def test_when_file_has_no_tags_then_returns_true(self):
+    def test_when_file_has_no_tags_then_returns_false(self):
         """
         Given a docx file with no tags
-        When should_skip_file is called
-        Then it should return True (skip - waiting for cleansing)
+        When has_been_cleansed is called
+        Then it should return False (not cleansed)
         """
         s3_client = boto3.client("s3")
         s3_client.create_bucket(Bucket="test-bucket")
         s3_client.put_object(Bucket="test-bucket", Key="test.docx", Body=b"test content")
 
-        assert should_skip_file(s3_client, "test-bucket", "test.docx")
+        assert not has_been_cleansed(s3_client, "test-bucket", "test.docx")
 
-    def test_when_file_has_document_processor_version_then_returns_false(self):
+    def test_when_file_has_document_processor_version_then_returns_true(self):
         """
         Given a docx file with DOCUMENT_PROCESSOR_VERSION tag
-        When should_skip_file is called
-        Then it should return False (process - file is cleaned)
+        When has_been_cleansed is called
+        Then it should return True (file is cleansed)
         """
         s3_client = boto3.client("s3")
         s3_client.create_bucket(Bucket="test-bucket")
@@ -124,13 +124,13 @@ class TestShouldSkipFile:
             Tagging={"TagSet": [{"Key": "DOCUMENT_PROCESSOR_VERSION", "Value": "1.0.0"}]},
         )
 
-        assert not should_skip_file(s3_client, "test-bucket", "test.docx")
+        assert has_been_cleansed(s3_client, "test-bucket", "test.docx")
 
-    def test_when_file_missing_document_processor_version_then_returns_true(self):
+    def test_when_file_missing_document_processor_version_then_returns_false(self):
         """
         Given a docx file without DOCUMENT_PROCESSOR_VERSION tag
-        When should_skip_file is called
-        Then it should return True (skip - not cleaned yet)
+        When has_been_cleansed is called
+        Then it should return False (not cleansed)
         """
         s3_client = boto3.client("s3")
         s3_client.create_bucket(Bucket="test-bucket")
@@ -143,18 +143,18 @@ class TestShouldSkipFile:
             Tagging={"TagSet": [{"Key": "OTHER_TAG", "Value": "value"}]},
         )
 
-        assert should_skip_file(s3_client, "test-bucket", "test.docx")
+        assert not has_been_cleansed(s3_client, "test-bucket", "test.docx")
 
-    def test_when_file_not_found_then_returns_true(self):
+    def test_when_file_not_found_then_returns_false(self):
         """
         Given a file that does not exist
-        When should_skip_file is called
-        Then it should return True (skip to be safe)
+        When has_been_cleansed is called
+        Then it should return False (treat as not cleansed)
         """
         s3_client = boto3.client("s3")
         s3_client.create_bucket(Bucket="test-bucket")
 
-        assert should_skip_file(s3_client, "test-bucket", "nonexistent.docx")
+        assert not has_been_cleansed(s3_client, "test-bucket", "nonexistent.docx")
 
 
 @pytest.fixture
