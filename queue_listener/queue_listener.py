@@ -50,10 +50,16 @@ def has_been_cleansed(s3_client, bucket_name, object_key):
     Any version indicates the file has been cleansed. This allows PDFs to be automatically
     regenerated when files are re-cleansed with a newer version of the document processor.
     """
-    tags_response = s3_client.get_object_tagging(Bucket=bucket_name, Key=object_key)
-    tags = {tag["Key"]: tag["Value"] for tag in tags_response.get("TagSet", [])}
-
-    return "DOCUMENT_PROCESSOR_VERSION" in tags
+    try:
+        tags_response = s3_client.get_object_tagging(Bucket=bucket_name, Key=object_key)
+        tags = {tag["Key"]: tag["Value"] for tag in tags_response.get("TagSet", [])}
+        return "DOCUMENT_PROCESSOR_VERSION" in tags
+    except botocore.exceptions.ClientError as exception:
+        # If the file doesn't exist, treat it as not cleansed
+        if exception.response["Error"]["Code"] == "NoSuchKey":
+            return False
+        else:
+            raise
 
 
 def handle_message(s3_client, sqs_client, queue_url, message):
