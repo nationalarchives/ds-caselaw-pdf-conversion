@@ -39,6 +39,29 @@ def would_replace_custom_pdf(s3_client, bucket_name, upload_key):
     return source == "custom-pdfs"
 
 
+def has_been_cleansed(s3_client, bucket_name, object_key):
+    """
+    Check if the docx file has been cleansed by checking its tags.
+    Returns:
+        - True if the file has been cleansed (has DOCUMENT_PROCESSOR_VERSION tag)
+        - False if it does not have the DOCUMENT_PROCESSOR_VERSION tag.
+
+    Note: We check for the presence of DOCUMENT_PROCESSOR_VERSION but not its value.
+    Any version indicates the file has been cleansed. This allows PDFs to be automatically
+    regenerated when files are re-cleansed with a newer version of the document processor.
+    """
+    try:
+        tags_response = s3_client.get_object_tagging(Bucket=bucket_name, Key=object_key)
+        tags = {tag["Key"]: tag["Value"] for tag in tags_response.get("TagSet", [])}
+        return "DOCUMENT_PROCESSOR_VERSION" in tags
+    except botocore.exceptions.ClientError as exception:
+        # If the file doesn't exist, treat it as not cleansed
+        if exception.response["Error"]["Code"] == "NoSuchKey":
+            return False
+        else:
+            raise
+
+
 def handle_message(s3_client, sqs_client, queue_url, message):
     eprint(message)
 
@@ -55,6 +78,13 @@ def handle_message(s3_client, sqs_client, queue_url, message):
         key_no_extension = ".".join(download_key.split(".")[:-1])
         upload_key = key_no_extension + ".pdf"
 
+        # Check if the file should be processed:
+
+        # Skip if not cleansed yet
+        if not has_been_cleansed(s3_client, bucket_name, download_key):
+            continue
+
+        # Skip if it would overwrite a custom PDF
         if would_replace_custom_pdf(s3_client, bucket_name, upload_key):
             rollbar_message = f"existing '{upload_key}' is from custom-pdfs, pdf-conversion is not overwriting it"
             rollbar.report_message(rollbar_message, "warning")

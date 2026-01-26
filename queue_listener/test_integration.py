@@ -5,7 +5,8 @@ from queue_listener import poll_once
 
 def test_poll_once(aws_setup, test_file):
     """
-    Given a docx file in an S3 bucket, and a message in a SQS queue referring to that s3 record
+    Given a cleaned docx file in an S3 bucket (with DOCUMENT_PROCESSOR_VERSION tag),
+    and a message in a SQS queue referring to that s3 record
     When poll_once is called with the S3 client, SQS client, and queue URL
     Then it should:
         - take the message off the SQS queue,
@@ -14,10 +15,16 @@ def test_poll_once(aws_setup, test_file):
     """
     s3_client, sqs_client, queue_url = aws_setup
 
-    # 1. Put test DOCX in S3
+    # 1. Put test DOCX in S3 with DOCUMENT_PROCESSOR_VERSION tag (cleaned file)
     with open(test_file, "rb") as f:
         docx_content = f.read()
         s3_client.put_object(Bucket="test-bucket", Key="judgment.docx", Body=docx_content)
+
+    s3_client.put_object_tagging(
+        Bucket="test-bucket",
+        Key="judgment.docx",
+        Tagging={"TagSet": [{"Key": "DOCUMENT_PROCESSOR_VERSION", "Value": "2.0.0"}]},
+    )
 
     # 2. Put message on queue
     message_body = json.dumps(
