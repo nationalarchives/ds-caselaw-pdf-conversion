@@ -7,6 +7,24 @@ This repository is part of the [Find Case Law](https://caselaw.nationalarchives.
 When a file is uploaded to the S3 bucket and ends in .docx, create a PDF file at the same key (but ending .pdf instead).
 Uses LibreOffice to perform the conversion.
 
+## Important: No Filetype Validation
+
+**Warning:** This ECS task performs no filetype checking whatsoever on the input document.
+
+The service is typically triggered by S3 bucket notifications when `.docx` files are uploaded, but the actual Python code blindly:
+
+1. Downloads whatever file the SQS message points to
+2. Saves it locally with a `.docx` extension (regardless of actual type)
+3. Runs `soffice --convert-to pdf` on it without validation
+4. Uploads whatever LibreOffice outputs as `.pdf`
+
+**Implications:**
+
+- **If you process a PDF:** LibreOffice will accept it and output a PDF (potentially re-converted or degraded)
+- **If you process other filetypes:** Behavior depends entirely on whether LibreOffice's conversion command succeeds or errors. Some formats (`.rtf`, `.odt`, `.txt`) may convert successfully, others will fail silently with no PDF output.
+
+The service completely trusts the S3 notification configuration and SQS messages. Be careful when manually sending messages to the queue or modifying S3 notification rules.
+
 ## Deployment
 
 ### Staging
