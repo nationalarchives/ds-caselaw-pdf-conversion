@@ -27,6 +27,8 @@ The service completely trusts the S3 notification configuration and SQS messages
 
 ## Deployment
 
+<!-- last_review: 2026-04-09 -->
+
 ### Staging
 
 The `main` branch is automatically deployed to staging with each commit.
