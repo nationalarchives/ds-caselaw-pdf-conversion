@@ -6,10 +6,10 @@ RUN apk add libffi libffi-dev build-base gcc python3-dev curl
 
 # Install python/poetry
 ENV PYTHONUNBUFFERED=1
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 -
+RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 - || cat /poetry-installer-error-*
 COPY ./docker_context/poetry.lock .
 COPY ./docker_context/pyproject.toml .
-RUN /etc/poetry/bin/poetry config virtualenvs.create false || cat /poetry-installer-error-*
+RUN /etc/poetry/bin/poetry config virtualenvs.create false
 RUN /etc/poetry/bin/poetry install --no-interaction --no-ansi
 
 COPY ./queue_listener ./queue_listener
