@@ -14,6 +14,7 @@ COPY ./docker_context/pyproject.toml .
 RUN /etc/poetry/bin/poetry config virtualenvs.create false
 RUN /etc/poetry/bin/poetry install --no-interaction --no-ansi
 
+
 COPY ./queue_listener ./queue_listener
 COPY ./docker_context .
 COPY ./fonts ./fonts
@@ -32,4 +33,4 @@ RUN mkdir -p /usr/share/fonts/truetype/docker-context
 RUN find /fonts/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/docker-context/ \; || return 1
 RUN fc-cache -f && rm -rf /var/cache/*
 
-CMD ["poetry", "run", "python", "queue_listener/queue_listener.py"]
+CMD ["python", "queue_listener/queue_listener.py"]
