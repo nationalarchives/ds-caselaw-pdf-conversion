@@ -2,15 +2,18 @@ FROM lscr.io/linuxserver/libreoffice:25.8.1@sha256:7db60c18dfb93755bb65f45a267f2
 RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
-RUN apk add libffi libffi-dev build-base gcc python3-dev curl
+RUN apk add -u libffi libffi-dev build-base gcc python3-dev curl
 
 # Install python/poetry
 ENV PYTHONUNBUFFERED=1
-RUN curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 - || cat /poetry-installer-error-*
+RUN curl -sSL https://install.python-poetry.org -o /tmp/poetry-installer.py && \
+    POETRY_HOME=/etc/poetry python3 /tmp/poetry-installer.py || \
+    { cat /poetry-installer-error-*; exit 1; }
 COPY ./docker_context/poetry.lock .
 COPY ./docker_context/pyproject.toml .
 RUN /etc/poetry/bin/poetry config virtualenvs.create false
 RUN /etc/poetry/bin/poetry install --no-interaction --no-ansi
+
 
 COPY ./queue_listener ./queue_listener
 COPY ./docker_context .
