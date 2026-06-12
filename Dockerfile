@@ -1,4 +1,4 @@
-FROM lscr.io/linuxserver/libreoffice:7.6.7@sha256:125e1bcf0a055cc9e5983a421fe7ecc87d78b2ae3b2f841acbe454a478020f99 AS libreoffice_base
+FROM lscr.io/linuxserver/libreoffice:25.8.1@sha256:7db60c18dfb93755bb65f45a267f2ac8dad0b0b107d2fb073185bae41e4c7938 AS libreoffice_base
 RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
@@ -32,5 +32,8 @@ RUN cp fonts.conf $HOME/.config/fontconfig/fonts.conf
 RUN mkdir -p /usr/share/fonts/truetype/docker-context
 RUN find /fonts/ -name "*.ttf" -exec install -m644 {} /usr/share/fonts/truetype/docker-context/ \; || return 1
 RUN fc-cache -f && rm -rf /var/cache/*
+
+# Run as non-root user (linuxserver.io already creates user at 1000:1000)
+USER 1000:1000
 
 CMD ["python", "queue_listener/queue_listener.py"]
