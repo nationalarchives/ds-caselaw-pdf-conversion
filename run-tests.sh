@@ -19,7 +19,7 @@ function run_docker() {
             docker build -t pdf-conversion:${tag} .
         fi
     fi
-    docker run --rm --user root pdf-conversion:${tag} /etc/poetry/bin/poetry run pytest queue_listener/ -vvvv
+    docker run --rm --user root --entrypoint /etc/poetry/bin/poetry pdf-conversion:${tag} run pytest queue_listener/ -vvvv
 }
 
 case "$1" in
