@@ -840,18 +840,18 @@ tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asy
 
 [[package]]
 name = "rollbar"
-version = "1.4.0"
+version = "1.5.0"
 description = "Easy and powerful exception tracking with Rollbar. Send messages and exceptions with arbitrary context, get back aggregates, and debug production issues quickly."
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "rollbar-1.4.0-py3-none-any.whl", hash = "sha256:4f5c183ce1cdc6316a2a675f887a6ccead3f9b5da35b8d6c4ad7a7c2904c602d"},
-    {file = "rollbar-1.4.0.tar.gz", hash = "sha256:98ad7f90012c791d0b40eac51b6fe688b1cadcc4aadff772fc0a23efe75fb5fc"},
+    {file = "rollbar-1.5.0-py3-none-any.whl", hash = "sha256:26b5988642c5bd99ebde86fa03c629559c4bbed9ae0fa69601f17824d1b4a113"},
+    {file = "rollbar-1.5.0.tar.gz", hash = "sha256:1940a2e007901d7023014be782a09828e2822b842a4b0f9034806cdb81e07f0c"},
 ]
 
 [package.dependencies]
-requests = ">=0.12.1"
+requests = ">=2.0.0"
 
 [[package]]
 name = "s3transfer"
@@ -937,4 +937,4 @@ test = ["pytest", "pytest-cov"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.0"
-content-hash = "e3333724236257c5f75e1c57f1dc3a6bb9881218b21c80a38f69276a7a626678"
+content-hash = "c3ea8e3d607502738237c5efe1ea0bf049ee9627d37c8daa6225627238960063"
