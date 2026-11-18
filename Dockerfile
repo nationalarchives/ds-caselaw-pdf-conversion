@@ -2,7 +2,7 @@ FROM lscr.io/linuxserver/libreoffice:25.8.7@sha256:10722dc789ea808ccc29bbae40817
 RUN apk --no-cache add msttcorefonts-installer fontconfig && \
     update-ms-fonts && \
     fc-cache -f
-RUN apk add -u libffi libffi-dev build-base gcc python3-dev curl
+RUN apk add -u --no-cache libffi libffi-dev build-base gcc python3-dev curl nginx>=1.30.7
 
 # Install python/poetry
 ENV PYTHONUNBUFFERED=1
